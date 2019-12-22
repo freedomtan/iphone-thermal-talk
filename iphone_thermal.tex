@@ -20,6 +20,7 @@
     linkbordercolor = {white},
 }
 \usepackage{listings}
+\usepackage{adjustbox}
 \defaultfontfeatures{Mapping=tex-text}
 
 \setbeamertemplate{caption}[numbered]
@@ -33,6 +34,7 @@
   \ruby{Iōng}{用}\ open-source \ruby{kang-k\=u }{工具} \ruby{lâi }{來} \ruby{thàm-khàn }{探看} \ruby{tsáu }{走} iOS ê \ruby{mih-â }{物仔} \ruby{lāi-té }{內底} \ruby{kah }{佮} \ruby{un-tōo }{溫度} \ruby{siong-kuan }{相關} \^e software \ruby{kah }{佮} hardware}
 
 \author[freedom]{T\^an Koan-S\^in \\ \href{mailto:freedom@computer.org}{freedom@computer.org} \\ COSCUP 2019 Lâi Tâi Káng}
+\date{December 21, 2019}
 
 \begin{frame}
   \titlepage
@@ -127,17 +129,42 @@
   \end{itemize}
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile,allowframebreaks]
   \frametitle{IOKit HIDClass}
   \begin{itemize}
   \item IOKit/IOKit Family/HID class \cite{iokit:family}: Originally it's for USB, but it's far beyond that now. So there is \textbf{Usage Page}.
-    \item a command line tool that can be used to enumrate IOKit devices is \texttt{ioreg(8)}
-    \begin{figure}
-      \includegraphics[width=\textwidth,keepaspectratio]{ioreg-1.png}
-      \caption{AppleEmbeddedNVMeTemperatureSensor shown by \texttt{ioreg -l}}
-    \end{figure}
-    \item you can see \texttt{"PrimaryUsage" = 5}, \texttt{"PrimaryUsagePage" = 65280}, and \texttt{"DeviceUsagePairs" = ({"DeviceUsagePage"=65280,"DeviceUsage"=5})}
+  \item a command line tool that can be used to enumrate IOKit devices is \texttt{ioreg(8)}
+  \item you can see \texttt{"PrimaryUsage" = 5}, \texttt{"PrimaryUsagePage" = 65280}, and \texttt{"DeviceUsagePairs" = ({"DeviceUsagePage"=65280,"DeviceUsage"=5})}
   \end{itemize}
+  
+  \begin{adjustbox}{width=\textwidth,keepaspectratio}
+    \begin{lstlisting}[caption={Example TemperatureSensor in \texttt{ioreg} output}]
+    ...
+    +-o AppleEmbeddedNVMeTemperatureSensor  <class AppleEmbeddedNVMeTemperatureSensor, id 0x1000003f8, registered, matched, active, busy 0 (1 ms), retain 8>
+    | |   |         | | {
+    | |   |         | |   "IOCFPlugInTypes" = {"7DDEECA8-A7B4-11DA-8A0E-0014519758EF"="IOHIDFamily.kext/PlugIns/IOHIDLib.plugin","FA12FA38-6F1A-11D4-BA0C-0005028F18D5"="IOHIDFamily.kext/PlugIns/IOHIDLib.plugin"}
+    | |   |         | |   "VendorID" = 0
+    | |   |         | |   "CountryCode" = 0
+    | |   |         | |   "IOUserClientClass" = "IOHIDEventServiceUserClient"
+    | |   |         | |   "Product" = "NAND CH0 temp"
+    | |   |         | |   "VersionNumber" = 0
+    | |   |         | |   "IOGeneralInterest" = "IOCommand is not serializable"
+    | |   |         | |   "PrimaryUsage" = 5
+    | |   |         | |   "LocationID" = 1414410350
+    | |   |         | |   "HIDEventServiceProperties" = {"DeviceOpenedByEventSystem"=Yes,"PreserveTimestamp"=Yes,"BatchInterval"=1,"LogLevel"=6}
+    | |   |         | |   "ProductID" = 0
+    | |   |         | |   "DeviceUsagePairs" = ({"DeviceUsagePage"=65280,"DeviceUsage"=5})
+    | |   |         | |   "Built-In" = Yes
+    | |   |         | |   "ReportInterval" = 0
+    | |   |         | |   "HIDServiceSupport" = Yes
+    | |   |         | |   "PrimaryUsagePage" = 65280
+    | |   |         | |   "VendorIDSource" = 0
+    | |   |         | |   "QueueSize" = 0
+    | |   |         | | }
+    ...
+    \end{lstlisting}
+  \end{adjustbox}
+
 \end{frame}
 
 \begin{frame}
@@ -155,10 +182,14 @@
 \end{frame}
 
 \begin{frame}
-  \frametitle{AppleHIDUsage}
+  \frametitle{The devil is in the detail}
   \begin{itemize}
-  \item \href{https://opensource.apple.com/source/IOHIDFamily/IOHIDFamily-701.60.2/IOHIDFamily/AppleHIDUsageTables.h.auto.html}{AppleHIDUsageTables}
+  \item some non public data types
+    \begin{itemize}
+    \item \href{https://opensource.apple.com/source/IOHIDFamily/IOHIDFamily-701.60.2/IOHIDFamily/AppleHIDUsageTables.h.auto.html}{AppleHIDUsageTables}
     \item \href{https://opensource.apple.com/source/IOHIDFamily/IOHIDFamily-701.60.2/IOHIDFamily/IOHIDEventTypes.h.auto.html}{IOHIDEventTypes}
+    \end{itemize}
+    \item some functions from source code. e.g., \texttt{IOHIDEventSystemClientRef IOHIDEventSystemClientCreate(CFAllocatorRef allocator);}
   \end{itemize}
 \end{frame}
 
@@ -206,39 +237,263 @@
   \end{figure}
 \end{frame}
 
-
-\begin{frame}[allowframebreaks]
+\begin{frame}[allowframebreaks,fragile]
   \frametitle{peeking running systems with cycript}
   \begin{itemize}
   \item attaching cycript to a running system process is a bit more complicated after iOS 12. We could start from a wrapper called cycrun, \url{https://www.reddit.com/r/jailbreakdevelopers/comments/b1r5kq/question\_is\_cycript\_coming\_to\_ios\_12\_unc0ver\_jb/}
   \item with \texttt{cyrun+cycript},
   \item \texttt{cyrun -x thermalmonitord -e}
   \item then where to start, singleton ones are less intrusive and easier
-    \begin{figure}
-      \includegraphics[width=.8\textwidth,keepaspectratio]{cycript-1.png}
-      \caption{TGraphSample}
-    \end{figure}
+\tiny
+\begin{lstlisting}[basicstyle=\tiny,frame=single,label='cyrun']
+~ root# cyrun -x thermalmonitord -e 
+applicationName: thermalmonitord is running (64)
+    executableName: thermalmonitord
+    bundleIdentifier: 
+    Cycript is active: thermalmonitord
+    Device is passcode locked
+    Tweak Mode
+Success, Cycript was already active for the Process. You may now run
+    cycript -r 127.0.0.1:8556
+cy# tgs = [TGraphSampler sharedInstance]
+#"<TGraphSampler: 0x104f04330>"
+cy# tgs->productObj 
+#"<tm0148f449e0ff00c77f11492610c521ce: 0x104f04090>"
+cy# tgs->
+__defineGetter__                              extratGraphDataSources
+__defineSetter__                              gotDataToLogToLiteMode
+__lookupGetter__                              hasOwnProperty
+__lookupSetter__                              isInternal
+__proto__                                     isPrototypeOf
+_appleCareState                               isa
+_appleCareStateLastLogged                     lastLogTimestamp
+_powerlogQueue                                listOfSupervisorControl
+_powerlogSubkeyController_Components          listofComponentControl
+_powerlogSubkeyController_HiP                 previousThermalSensorValues
+_powerlogSubkeyController_Hotspots            productObj
+_powerlogSubkeyController_LiteMode            propertyIsEnumerable
+_powerlogSubkeyController_MiscExternalState   tGraphDataString
+_powerlogSubkeyController_MiscInternalState   toLocaleString
+_powerlogSubkeyController_Sensors             toString
+_powerlogSubkeyController_Sensors_Components  valueOf
+constructor
+\end{lstlisting}
+\normalsize
     \item as you see, we can get \texttt{productObj}
-      \begin{figure}
-        \includegraphics[width=.8\textwidth,keepaspectratio]{cycript-2.png}
-        \caption{HidSensors}
-      \end{figure}
-      \item as you can see, the \texttt{thermalmonitord} uses HID sensors.
+      \tiny
+      \begin{lstlisting}[basicstyle=\tiny,frame=single,label=cycript-hidsensors]
+cy# hs =  [HidSensors sharedInstance]
+#"<HidSensors: 0x10582bac0>"
+cy# new Instance(hs->_tempSensors)[0]
+#"+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n
+RegistryID:          0x0000000100000277\n
+BuiltIn:             1\n
+Product:             Avg: PMGR SOC Die Temp Sensor0\n
+LocationID:          1416114273\n
+VendorID:            0\n
+ProductID:           0\n
+CountryCode:         0\n
+PrimaryUsagePage:    65280\n
+PrimaryUsage:        5\n
+DeviceUsagePairs:   \n
+    DeviceUsagePage:     65280\n
+    DeviceUsage:         5\n
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n"
+cy# 
+      \end{lstlisting}
+      \normalsize
+  \item as you can see, the \texttt{thermalmonitord} uses HID sensors.
   \end{itemize}
 \end{frame}
 
 \section{Other Tools}
-\begin{frame}
+\begin{frame}[allowframebreaks,fragile]
   \frametitle{Other tools}
   \begin{itemize}
   \item binutils and other hacking tools, such as lsof
-  \item lldb/gdb on devices: Apple used to ship ``fat'' gdb and lldb, but not anymore(?). LLDB allows using Objective-C style syntax (most iOS programmers before Swift was introduced know Objective-C)
-  \item remote debbuging: either cross building or native building of lldb could be an ostacle, if you are not afraind of using remote debugging, they (debuggserver and lldb) are open source too.
+  \item lldb/gdb on devices: Apple used to ship ``fat'' gdb and lldb, but not anymore(?). LLDB allows using Objective-C style syntax (most iOS programmers before Swift was introduced know Objective-C).
+  \item remote debbuging: either cross building or native building of lldb could be an ostacle, if you are not afraind of using remote debugging, they (debuggserver and lldb) are open source too. Example usage (my iMAC: \texttt{192.168.1.80}, the iPhone: \texttt{192.168.1.115)}
+    \begin{enumerate}
+    \item install \texttt{debuggerserver} on your iDevice. Then, run \texttt{debugserver 192.168.1.80:5555 --attach=thermalmonitord} to wait for connection from \texttt{192.168.1.80} to port 5555 of this devices.
+    \item on you host, launch \texttt{lldb}, then use \texttt{platform select remote-ios} and \texttt{process connect connect://192.168.1.115:5555} to connect to the \texttt{debugserver} on the remote device. You should see something like Listing ~\ref{connect-to-lldb}
+    \item we can examine \texttt{TGraphSampler} as in Listing ~\ref{TGraphSampler}
+    \item and \texttt{HidSenors} as in Listing ~\ref{HidSensors}
+    \end{enumerate}
+    \item \textbf{NOTE: DON'T interrupt the \texttt{thermalmonitord} too long, otherwise the device will reboot.}
   \end{itemize}
+  \begin{adjustbox}{width=\textwidth,keepaspectratio}
+    \begin{lstlisting}[caption={connect to debugserver from lldb},label={connect-to-lldb}]
+(lldb) platform select remote-ios
+  Platform: remote-ios
+ Connected: no
+  SDK Path: "/Users/freedom/Library/Developer/Xcode/iOS DeviceSupport/13.3 (17C54)"
+ SDK Roots: [ 0] "/Users/freedom/Library/Developer/Xcode/iOS DeviceSupport/13.3 (17C54)"
+(lldb) process connect connect://192.168.1.115:5555
+Process 64 stopped
+* thread #1, queue = 'com.apple.main-thread', stop reason = signal SIGSTOP
+    frame #0: 0x0000000184864634 libsystem_kernel.dylib`mach_msg_trap + 8
+libsystem_kernel.dylib`mach_msg_trap:
+->  0x184864634 <+8>: ret    
+
+libsystem_kernel.dylib`mach_msg_overwrite_trap:
+    0x184864638 <+0>: mov    x16, #-0x20
+    0x18486463c <+4>: svc    #0x80
+    0x184864640 <+8>: ret    
+Target 0: (thermalmonitord) stopped.
+    \end{lstlisting}
+  \end{adjustbox}
+
+  \tiny
+  \begin{lstlisting}[basicstyle=\tiny,caption={TGraphSampler},label=TGraphSampler]
+(lldb) expr TGraphSampler* $tgs = [TGraphSampler sharedInstance]
+(lldb) p *$tgs
+(TGraphSampler) $0 = {
+  NSObject = {
+    isa = TGraphSampler
+  }
+  productObj = 0x0000000103e03f80
+  listofComponentControl = 0x0000000103e041a0 @"9 elements"
+  listOfSupervisorControl = 0x0000000103e041d0 @"12 elements"
+  extratGraphDataSources = 0x0000000103e04520
+  tGraphDataString = 0x0000000000000000
+  isInternal = false
+  gotDataToLogToLiteMode = false
+  lastLogTimestamp = 38967673125
+  previousThermalSensorValues = {
+    [0] = 0
+    [1] = 0
+    [2] = 0
+    [3] = 0
+    [4] = 0
+    [5] = 0
+    [6] = 0
+    [7] = 0
+    [8] = 0
+    [9] = 0
+    [10] = 0
+    [11] = 0
+    [12] = 0
+    [13] = 0
+    [14] = 0
+    [15] = 0
+    [16] = 0
+    [17] = 0
+    [18] = 0
+    [19] = 0
+    [20] = 0
+    [21] = 0
+    [22] = 0
+    [23] = 0
+    [24] = 0
+    [25] = 0
+    [26] = 0
+    [27] = 0
+    [28] = 0
+    [29] = 0
+    [30] = 0
+    [31] = 0
+    [32] = 0
+    [33] = 0
+    [34] = 0
+    [35] = 0
+    [36] = 0
+    [37] = 0
+    [38] = 0
+    [39] = 0
+    [40] = 0
+    [41] = 0
+    [42] = 0
+    [43] = 0
+    [44] = 0
+    [45] = 0
+    [46] = 0
+    [47] = 0
+    [48] = 0
+    [49] = 0
+    [50] = 0
+    [51] = 0
+    [52] = 0
+    [53] = 0
+    [54] = 0
+    [55] = 0
+    [56] = 0
+    [57] = 0
+    [58] = 0
+    [59] = 0
+    [60] = 0
+    [61] = 0
+    [62] = 0
+    [63] = 0
+  }
+  _powerlogQueue = 0x0000000103e04850
+  _powerlogSubkeyController_Hotspots = 0x0000000103e04610
+  _powerlogSubkeyController_Components = 0x0000000103e04690
+  _powerlogSubkeyController_Sensors = 0x0000000103e046d0
+  _powerlogSubkeyController_MiscInternalState = 0x0000000103e04710
+  _powerlogSubkeyController_MiscExternalState = 0x0000000103e04750
+  _powerlogSubkeyController_LiteMode = 0x0000000103e04790
+  _powerlogSubkeyController_HiP = 0x0000000103e047d0
+  _powerlogSubkeyController_Sensors_Components = 0x0000000103e04810
+  _appleCareState = 0x0000000103e048d0 @"5 elements"
+  _appleCareStateLastLogged = 0x0000000103e04af0 @"5 elements"
+ }
+(lldb) po $tgs->productObj
+<tm0148f449e0ff00c77f11492610c521ce: 0x103e03f80>    
+  \end{lstlisting}
+  
+  \begin{lstlisting}[caption=''HidSensors'',label=HidSensors]
+(lldb) expr HidSensors * $hs = [HidSensors sharedInstance]
+(lldb) p *$hs
+(HidSensors) $1 = {
+  NSObject = {
+    isa = HidSensors
+  }
+  _hidEventSystem = 0x0000000103d0f9c0
+  _infoOnlyHIDSensors = 0x0000000103f2d400
+  _callbackSensorIntervals = 0x0000000103f2cc10
+  _readFailuresExpected = 0x0000000000000000
+  _powerSensors = 0x0000000000000000
+  hidSensorKeys = 0x0000000103e037a0
+  sensorFourCharCode = 0x0000000103e03db0
+  synthSensorKeys = 0x0000000103e03de0
+  _callbackTemperatures = 0x0000000103f31630
+  _potentiallyStaleSensorTimestamps = 0x0000000103e03e10
+  _potentiallyStaleSensorDefaults = 0x0000000103f2c840
+  _callbackTemperaturesQueue = 0x0000000103f2d570
+  sensorWatchdogMask = 1236950581247
+  _infoOnlySensorsActive = false
+  _dispatchVirtualTemp = true
+  _send2DTempGrid = false
+  _tempSensors = 0x0000000105015fc0
+  _count = 36
+  _shadowSensorCount = 8
+  _sensorDict = 0x0000000103f30e80
+  _serviceToName = 0x0000000103f31670
+}
+(lldb) po $hs->_tempSensors
+<__NSArrayI 0x105015fc0>(
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+RegistryID:          0x0000000100000270
+BuiltIn:             1
+Product:             Max: PMGR SOC Die Temp Sensor3
+LocationID:          1416115064
+VendorID:            0
+ProductID:           0
+CountryCode:         0
+PrimaryUsagePage:    65280
+PrimaryUsage:        5
+DeviceUsagePairs:   
+    DeviceUsagePage:     65280
+    DeviceUsage:         5
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+,
+....    
+  \end{lstlisting}
+  \normalsize
 \end{frame}
 
 \begin{frame}
-  \frametitle{template}
+  \frametitle{concluding remarks}
   \begin{itemize}
   \item iOS uses many open source components and you can use open source tools to explore iDevices.
   \item how about Android devices: as far as I can tell, most Android devices the ``standard'' Linux thermal framework.
