@@ -1,9 +1,7 @@
 \documentclass{beamer}
-%\usepackage{xeCJK}
 \usepackage[CJKspace,space,CJKspace=true]{xeCJK}
 \usepackage{fontspec,xunicode}
 \setCJKsansfont{PingFang TC}
-%\setsansfont{Menlo}
 \setsansfont{Helvetica}
 %\setCJKsansfont{Apple LiGothic}
 %\setCJKsansfont{Lucida Grande}
@@ -49,10 +47,10 @@
 \begin{frame}
   \frametitle{Who am I?}
   \begin{itemize}
-    \item ``\ruby{Guá-sī }{我是}  \ruby{tsi̍t-ê }{一个} \ruby{siá }{寫} code \ruby{ê }{个} \ruby{lâng}{人}, \ruby{guá-ê-khóo }{我个苦} \ruby{lóng}{攏} \ruby{siá-tī }{寫佇} \ruby{bīn-tíng}{面頂}'' 
-    \item Learnt to use open source on a VAX-11/780 running 4.3BSD, before the term ``open source'' was coined
-    \item Learnt a bit Pe̍h-ōe-jī about the same time
-    \item feel free to interrupt me anytime
+  \item ``\ruby{Guá-sī }{我是}  \ruby{tsi̍t-ê }{一个} \ruby{siá }{寫} code \ruby{ê }{个} \ruby{lâng}{人}, \ruby{guá-ê-khóo }{我个苦} \ruby{lóng}{攏} \ruby{siá-tī }{寫佇} \ruby{bīn-tíng}{面頂}'' -- Somebody I Don't Know His Name, COSCUP 2017
+  \item Learnt to use open source on a VAX-11/780 running 4.3BSD, before the term ``open source'' was coined
+  \item Learnt a bit Pe̍h-ōe-jī about the same time
+  \item feel free to interrupt me anytime
   \end{itemize}
 \end{frame}
 
@@ -69,9 +67,9 @@
 \begin{frame}[allowframebreaks]
   \frametitle{iPhone 6 Thermal Sensors}
   \begin{figure}
-  \includegraphics[width=.3\textwidth,keepaspectratio]{iphone6_temp_1.png}
-  \includegraphics[width=.3\textwidth,keepaspectratio]{iphone6_temp_2.png}
-  \includegraphics[width=.3\textwidth,keepaspectratio]{iphone6_temp_3.png}
+    \includegraphics[width=.3\textwidth,keepaspectratio]{iphone6_temp_1.png}
+    \includegraphics[width=.3\textwidth,keepaspectratio]{iphone6_temp_2.png}
+    \includegraphics[width=.3\textwidth,keepaspectratio]{iphone6_temp_3.png}
   \end{figure}
   \begin{itemize}
   \item There are 32 thermal sensors (and 21 current and voltage sensors) on iPhone 6!
@@ -134,11 +132,11 @@
   \begin{itemize}
   \item IOKit/IOKit Family/HID class \cite{iokit:family}: Originally it's for USB, but it's far beyond that now. So there is \textbf{Usage Page}.
   \item a command line tool that can be used to enumrate IOKit devices is \texttt{ioreg(8)}
-  \item you can see \texttt{"PrimaryUsage" = 5}, \texttt{"PrimaryUsagePage" = 65280}, and \texttt{"DeviceUsagePairs" = ({"DeviceUsagePage"=65280,"DeviceUsage"=5})}
+  \item you can see in Listing \ref{ioreg-output}, there are \texttt{"PrimaryUsage" = 5}, \texttt{"PrimaryUsagePage" = 65280}, and \texttt{"DeviceUsagePairs" = ({"DeviceUsagePage"=65280,"DeviceUsage"=5})}
   \end{itemize}
   
-  \begin{adjustbox}{width=\textwidth,keepaspectratio}
-    \begin{lstlisting}[caption={Example TemperatureSensor in \texttt{ioreg} output}]
+  \begin{adjustbox}{varwidth=\maxdimen,max width=\linewidth,keepaspectratio}
+    \begin{lstlisting}[caption={Example TemperatureSensor in \texttt{ioreg} output}, label={ioreg-output}]
     ...
     +-o AppleEmbeddedNVMeTemperatureSensor  <class AppleEmbeddedNVMeTemperatureSensor, id 0x1000003f8, registered, matched, active, busy 0 (1 ms), retain 8>
     | |   |         | | {
@@ -244,8 +242,13 @@
   \item with \texttt{cyrun+cycript},
   \item \texttt{cyrun -x thermalmonitord -e}
   \item then where to start, singleton ones are less intrusive and easier
-\tiny
-\begin{lstlisting}[basicstyle=\tiny,frame=single,label='cyrun']
+  \item as you see, we can get \texttt{productObj}
+  \item as you can see, the \texttt{thermalmonitord} uses HID sensors.
+  \end{itemize}
+
+  \tiny
+  \begin{adjustbox}{varwidth=\maxdimen,max width=\linewidth,keepaspectratio}
+    \begin{lstlisting}[basicstyle=\tiny,caption={Cyrun},label=cyrun,breaklines]
 ~ root# cyrun -x thermalmonitord -e 
 applicationName: thermalmonitord is running (64)
     executableName: thermalmonitord
@@ -277,11 +280,11 @@ _powerlogSubkeyController_MiscInternalState   toLocaleString
 _powerlogSubkeyController_Sensors             toString
 _powerlogSubkeyController_Sensors_Components  valueOf
 constructor
-\end{lstlisting}
-\normalsize
-    \item as you see, we can get \texttt{productObj}
-      \tiny
-      \begin{lstlisting}[basicstyle=\tiny,frame=single,label=cycript-hidsensors]
+    \end{lstlisting}
+  \end{adjustbox}
+
+  \begin{adjustbox}{varwidth=\maxdimen,max width=\linewidth,keepaspectratio}
+    \begin{lstlisting}[basicstyle=\tiny,caption={Cycript HidSensos},label=cycript-hidsensors,breaklines]
 cy# hs =  [HidSensors sharedInstance]
 #"<HidSensors: 0x10582bac0>"
 cy# new Instance(hs->_tempSensors)[0]
@@ -300,10 +303,8 @@ DeviceUsagePairs:   \n
     DeviceUsage:         5\n
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n"
 cy# 
-      \end{lstlisting}
-      \normalsize
-  \item as you can see, the \texttt{thermalmonitord} uses HID sensors.
-  \end{itemize}
+    \end{lstlisting}
+  \end{adjustbox}
 \end{frame}
 
 \section{Other Tools}
@@ -321,8 +322,9 @@ cy#
     \end{enumerate}
     \item \textbf{NOTE: DON'T interrupt the \texttt{thermalmonitord} too long, otherwise the device will reboot.}
   \end{itemize}
-  \begin{adjustbox}{width=\textwidth,keepaspectratio}
-    \begin{lstlisting}[caption={connect to debugserver from lldb},label={connect-to-lldb}]
+  
+  \tiny  
+  \begin{lstlisting}[basicstyle=\tiny,caption={connect to debugserver from lldb},label={connect-to-lldb}]
 (lldb) platform select remote-ios
   Platform: remote-ios
  Connected: no
@@ -340,10 +342,8 @@ libsystem_kernel.dylib`mach_msg_overwrite_trap:
     0x18486463c <+4>: svc    #0x80
     0x184864640 <+8>: ret    
 Target 0: (thermalmonitord) stopped.
-    \end{lstlisting}
-  \end{adjustbox}
-
-  \tiny
+  \end{lstlisting}
+  
   \begin{lstlisting}[basicstyle=\tiny,caption={TGraphSampler},label=TGraphSampler]
 (lldb) expr TGraphSampler* $tgs = [TGraphSampler sharedInstance]
 (lldb) p *$tgs
@@ -439,9 +439,10 @@ Target 0: (thermalmonitord) stopped.
  }
 (lldb) po $tgs->productObj
 <tm0148f449e0ff00c77f11492610c521ce: 0x103e03f80>    
-  \end{lstlisting}
+    \end{lstlisting}
+  %\end{adjustbox}
   
-  \begin{lstlisting}[caption=''HidSensors'',label=HidSensors]
+  \begin{lstlisting}[basicstyle=\tiny,caption=''HidSensors'',label=HidSensors]
 (lldb) expr HidSensors * $hs = [HidSensors sharedInstance]
 (lldb) p *$hs
 (HidSensors) $1 = {
@@ -489,7 +490,6 @@ DeviceUsagePairs:
 ,
 ....    
   \end{lstlisting}
-  \normalsize
 \end{frame}
 
 \begin{frame}
@@ -500,12 +500,11 @@ DeviceUsagePairs:
   \end{itemize}
 \end{frame}
 
-\begin{frame}[allowframebreaks]
-  \begin{block}{References}
-    \tiny
-    \bibliography{ref}
-    \bibliographystyle{acm}
-  \end{block} 
+\begin{frame}[allowframebreaks,fragile]
+  \frametitle{References}
+  \tiny
+  \bibliography{ref}
+  \bibliographystyle{acm}
 \end{frame}
 
 \end{document}
