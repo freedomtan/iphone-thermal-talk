@@ -32,7 +32,7 @@
   \ruby{Iōng}{用}\ open-source \ruby{kang-k\=u }{工具} \ruby{lâi }{來} \ruby{thàm-khàn }{探看} \ruby{tsáu }{走} iOS ê \ruby{mih-â }{物仔} \ruby{lāi-té }{內底} \ruby{kah }{佮} \ruby{un-tōo }{溫度} \ruby{siong-kuan }{相關} \^e software \ruby{kah }{佮} hardware}
 
 \author[freedom]{T\^an Koan-S\^in \\ \href{mailto:freedom@computer.org}{freedom@computer.org} \\ COSCUP 2019 Lâi Tâi Káng}
-\date{December 21, 2019 \\ Modified \today}
+\date{December 21, 2019 \\ Updated \today}
 
 \begin{frame}
   \titlepage
@@ -162,7 +162,6 @@
     ...
     \end{lstlisting}
   \end{adjustbox}
-
 \end{frame}
 
 \begin{frame}
@@ -179,7 +178,7 @@
   \end{itemize}
 \end{frame}
 
-\begin{frame}
+\begin{frame}[allowframebreaks]
   \frametitle{The devil is in the detail}
   \begin{itemize}
   \item some non public data types
@@ -190,6 +189,12 @@
   \item some functions from source code. e.g., \texttt{IOHIDEventSystemClientRef IOHIDEventSystemClientCreate(CFAllocatorRef allocator);}
   \item .plist file(s) in \texttt{/System/Library/ThermalMonitor/}
   \end{itemize}
+  \center
+  \begin{figure}
+    \includegraphics[width=.4\textwidth,keepaspectratio]{hidutil-list-iphone8-plus.pdf}
+    \includegraphics[width=.4\textwidth,keepaspectratio]{hidutil-list-iphone7.pdf}
+    \caption{Outputs of \texttt{hidutil list} on jailbroken iPhone 7 and 8 Plus to verify that number of power senors are less on devices after A11.}
+  \end{figure}
 \end{frame}
 
 \section{More Thermal Control Related Mechanisms}
